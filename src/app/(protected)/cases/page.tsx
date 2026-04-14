@@ -1,40 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Clock, CheckCircle, Filter } from "lucide-react";
+import { Clock, CheckCircle, Filter, Loader2 } from "lucide-react";
 
-type CaseStatus = "en_cours" | "resolu";
+type CaseStatus = "en_cours" | "resolu" | "archive";
 
-interface CaseItem {
+interface CaseData {
   id: string;
-  patientAge: number;
-  patientSex: string;
-  motif: string;
+  chief_complaint: string;
   status: CaseStatus;
-  date: string;
+  created_at: string;
+  patients: {
+    age: number;
+    sex: string;
+    region: string;
+  };
 }
 
-const mockCases: CaseItem[] = [
-  { id: "1", patientAge: 45, patientSex: "M", motif: "Douleur thoracique recurrente", status: "en_cours", date: "2026-04-12" },
-  { id: "2", patientAge: 32, patientSex: "F", motif: "Cephalees chroniques avec aura", status: "resolu", date: "2026-04-10" },
-  { id: "3", patientAge: 58, patientSex: "M", motif: "Fatigue persistante et perte de poids", status: "en_cours", date: "2026-04-11" },
-  { id: "4", patientAge: 27, patientSex: "F", motif: "Eruption cutanee prurigineuse", status: "resolu", date: "2026-04-09" },
-  { id: "5", patientAge: 63, patientSex: "M", motif: "Dyspnee d'effort progressive", status: "en_cours", date: "2026-04-13" },
-  { id: "6", patientAge: 41, patientSex: "F", motif: "Douleurs articulaires migrantes", status: "resolu", date: "2026-04-08" },
-  { id: "7", patientAge: 55, patientSex: "M", motif: "Hematurie macroscopique", status: "en_cours", date: "2026-04-14" },
-];
-
-const statusConfig: Record<CaseStatus, { label: string; color: string; icon: typeof Clock }> = {
+const statusConfig: Record<
+  string,
+  { label: string; color: string; icon: typeof Clock }
+> = {
   en_cours: { label: "En cours", color: "text-warning", icon: Clock },
   resolu: { label: "Resolu", color: "text-success", icon: CheckCircle },
+  archive: { label: "Archive", color: "text-text-muted", icon: CheckCircle },
 };
 
 export default function CasesPage() {
+  const [cases, setCases] = useState<CaseData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | CaseStatus>("all");
 
-  const filtered =
-    filter === "all" ? mockCases : mockCases.filter((c) => c.status === filter);
+  useEffect(() => {
+    setLoading(true);
+    const url =
+      filter === "all" ? "/api/cases" : `/api/cases?status=${filter}`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        setCases(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [filter]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -44,7 +53,9 @@ export default function CasesPage() {
           <Filter size={16} strokeWidth={1.5} className="text-text-muted" />
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as "all" | CaseStatus)}
+            onChange={(e) =>
+              setFilter(e.target.value as "all" | CaseStatus)
+            }
             className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150 appearance-none"
           >
             <option value="all">Tous</option>
@@ -54,62 +65,88 @@ export default function CasesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                ID
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                Patient
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
-                Motif
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                Statut
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
-                Date
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.map((c) => {
-              const status = statusConfig[c.status];
-              const StatusIcon = status.icon;
-              return (
-                <tr key={c.id} className="hover:bg-surface transition-colors duration-150">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/cases/${c.id}`}
-                      className="text-sm font-medium text-accent hover:underline"
-                    >
-                      #{c.id}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-text-dark">
-                    {c.patientAge} ans, {c.patientSex}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-text-secondary hidden sm:table-cell max-w-xs truncate">
-                    {c.motif}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium ${status.color}`}>
-                      <StatusIcon size={12} strokeWidth={1.5} />
-                      {status.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-text-muted hidden sm:table-cell">
-                    {c.date}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={24} className="animate-spin text-text-muted" />
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  Patient
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                  Motif
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  Statut
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {cases.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-sm text-text-secondary"
+                  >
+                    Aucun cas
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                cases.map((c) => {
+                  const status =
+                    statusConfig[c.status] || statusConfig.en_cours;
+                  const StatusIcon = status.icon;
+                  const date = new Date(c.created_at)
+                    .toISOString()
+                    .split("T")[0];
+                  return (
+                    <tr
+                      key={c.id}
+                      className="hover:bg-surface transition-colors duration-150"
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/cases/${c.id}`}
+                          className="text-sm font-medium text-accent hover:underline"
+                        >
+                          #{c.id.slice(0, 8)}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-dark">
+                        {c.patients?.age} ans, {c.patients?.sex}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-secondary hidden sm:table-cell max-w-xs truncate">
+                        {c.chief_complaint}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs font-medium ${status.color}`}
+                        >
+                          <StatusIcon size={12} strokeWidth={1.5} />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-muted hidden sm:table-cell">
+                        {date}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

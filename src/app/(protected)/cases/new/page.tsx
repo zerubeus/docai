@@ -109,6 +109,9 @@ export default function NewCasePage() {
     { name: "", dosage: "", duration: "", outcome: "" },
   ]);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   function addSymptom() {
     setSymptoms([...symptoms, { name: "", severity: "1", duration: "" }]);
   }
@@ -171,9 +174,41 @@ export default function NewCasePage() {
     setTreatments(updated);
   }
 
-  function handleSubmit() {
-    // Mock: redirect to analysis page with id "1"
-    router.push("/cases/1");
+  async function handleSubmit() {
+    setSubmitting(true);
+    setError("");
+
+    const payload = {
+      age,
+      sex,
+      region,
+      chief_complaint: motif,
+      symptoms: symptoms.filter((s) => s.name.trim()),
+      history: antecedents.filter((a) => a.condition.trim()),
+      tests: examens.filter((e) => e.testName.trim()),
+      treatments: treatments.filter((t) => t.name.trim()),
+    };
+
+    try {
+      const res = await fetch("/api/cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Erreur lors de la creation du cas");
+        setSubmitting(false);
+        return;
+      }
+
+      const { id } = await res.json();
+      router.push(`/cases/${id}`);
+    } catch {
+      setError("Erreur de connexion");
+      setSubmitting(false);
+    }
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -217,6 +252,12 @@ export default function NewCasePage() {
           />
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-error/5 border border-error/20 px-4 py-3 text-sm text-error">
+          {error}
+        </div>
+      )}
 
       {/* Step content */}
       <div className="bg-white rounded-lg border border-border shadow-sm p-6">
@@ -702,9 +743,10 @@ export default function NewCasePage() {
         ) : (
           <button
             onClick={handleSubmit}
-            className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent/90 transition-colors duration-150"
+            disabled={submitting}
+            className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors duration-150"
           >
-            Soumettre le cas
+            {submitting ? "Envoi..." : "Soumettre le cas"}
           </button>
         )}
       </div>

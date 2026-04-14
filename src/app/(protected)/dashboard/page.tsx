@@ -1,89 +1,84 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Clock, CheckCircle, ChevronRight } from "lucide-react";
+import { Plus, Clock, CheckCircle, ChevronRight, Loader2 } from "lucide-react";
 
-type CaseStatus = "en_cours" | "resolu";
+type CaseStatus = "en_cours" | "resolu" | "archive";
 
-interface MockCase {
+interface CaseData {
   id: string;
-  patientAge: number;
-  patientSex: string;
-  patientRegion: string;
-  chiefComplaint: string;
-  suggestionsCount: number;
+  chief_complaint: string;
   status: CaseStatus;
-  date: string;
+  created_at: string;
+  patients: {
+    age: number;
+    sex: string;
+    region: string;
+  };
+  suggestions: { id: string }[];
 }
 
-const mockCases: MockCase[] = [
+const statusConfig: Record<
+  string,
   {
-    id: "1",
-    patientAge: 45,
-    patientSex: "M",
-    patientRegion: "Tunis",
-    chiefComplaint: "Douleur thoracique recurrente",
-    suggestionsCount: 4,
-    status: "en_cours",
-    date: "2026-04-12",
+    label: string;
+    borderColor: string;
+    textColor: string;
+    icon: typeof Clock;
+  }
+> = {
+  en_cours: {
+    label: "En cours",
+    borderColor: "border-l-warning",
+    textColor: "text-warning",
+    icon: Clock,
   },
-  {
-    id: "2",
-    patientAge: 32,
-    patientSex: "F",
-    patientRegion: "Sousse",
-    chiefComplaint: "Cephalees chroniques avec aura",
-    suggestionsCount: 3,
-    status: "resolu",
-    date: "2026-04-10",
+  resolu: {
+    label: "Resolu",
+    borderColor: "border-l-success",
+    textColor: "text-success",
+    icon: CheckCircle,
   },
-  {
-    id: "3",
-    patientAge: 58,
-    patientSex: "M",
-    patientRegion: "Sfax",
-    chiefComplaint: "Fatigue persistante et perte de poids",
-    suggestionsCount: 5,
-    status: "en_cours",
-    date: "2026-04-11",
+  archive: {
+    label: "Archive",
+    borderColor: "border-l-text-muted",
+    textColor: "text-text-muted",
+    icon: CheckCircle,
   },
-  {
-    id: "4",
-    patientAge: 27,
-    patientSex: "F",
-    patientRegion: "Ariana",
-    chiefComplaint: "Eruption cutanee prurigineuse",
-    suggestionsCount: 2,
-    status: "resolu",
-    date: "2026-04-09",
-  },
-  {
-    id: "5",
-    patientAge: 63,
-    patientSex: "M",
-    patientRegion: "Monastir",
-    chiefComplaint: "Dyspnee d'effort progressive",
-    suggestionsCount: 4,
-    status: "en_cours",
-    date: "2026-04-13",
-  },
-];
-
-const statusConfig: Record<CaseStatus, { label: string; borderColor: string; textColor: string; icon: typeof Clock }> = {
-  en_cours: { label: "En cours", borderColor: "border-l-warning", textColor: "text-warning", icon: Clock },
-  resolu: { label: "Resolu", borderColor: "border-l-success", textColor: "text-success", icon: CheckCircle },
 };
 
 export default function DashboardPage() {
-  const totalCases = mockCases.length;
-  const enCours = mockCases.filter((c) => c.status === "en_cours").length;
+  const [cases, setCases] = useState<CaseData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/cases")
+      .then((res) => res.json())
+      .then((data) => {
+        setCases(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const totalCases = cases.length;
+  const enCours = cases.filter((c) => c.status === "en_cours").length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 size={24} className="animate-spin text-text-muted" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-text-dark">Dashboard</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {totalCases} cas total &bull; {enCours} en cours &bull; 89% suggestions utiles
+          {totalCases} cas total &bull; {enCours} en cours
         </p>
       </div>
 
@@ -96,42 +91,58 @@ export default function DashboardPage() {
       </Link>
 
       <div>
-        <h2 className="text-lg font-semibold text-text-dark mb-4">Cas recents</h2>
-        <div className="space-y-3">
-          {mockCases.map((c) => {
-            const status = statusConfig[c.status];
-            const StatusIcon = status.icon;
-            return (
-              <Link
-                key={c.id}
-                href={`/cases/${c.id}`}
-                className={`block bg-white rounded-lg border border-border border-l-4 ${status.borderColor} shadow-sm hover:shadow-md transition-shadow duration-150 p-4`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1 min-w-0">
-                    <p className="text-sm font-medium text-text-dark truncate">
-                      {c.chiefComplaint}
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      Patient: {c.patientAge} ans, {c.patientSex} &bull; {c.patientRegion}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium ${status.textColor}`}>
-                        <StatusIcon size={12} strokeWidth={1.5} />
-                        {status.label}
-                      </span>
-                      <span className="text-xs text-text-muted">
-                        {c.suggestionsCount} suggestions
-                      </span>
-                      <span className="text-xs text-text-muted">{c.date}</span>
+        <h2 className="text-lg font-semibold text-text-dark mb-4">
+          Cas recents
+        </h2>
+        {cases.length === 0 ? (
+          <p className="text-sm text-text-secondary py-8 text-center">
+            Aucun cas pour le moment.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {cases.map((c) => {
+              const status = statusConfig[c.status] || statusConfig.en_cours;
+              const StatusIcon = status.icon;
+              const date = new Date(c.created_at).toISOString().split("T")[0];
+              return (
+                <Link
+                  key={c.id}
+                  href={`/cases/${c.id}`}
+                  className={`block bg-white rounded-lg border border-border border-l-4 ${status.borderColor} shadow-sm hover:shadow-md transition-shadow duration-150 p-4`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-sm font-medium text-text-dark truncate">
+                        {c.chief_complaint}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        Patient: {c.patients?.age} ans, {c.patients?.sex}{" "}
+                        &bull; {c.patients?.region}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs font-medium ${status.textColor}`}
+                        >
+                          <StatusIcon size={12} strokeWidth={1.5} />
+                          {status.label}
+                        </span>
+                        <span className="text-xs text-text-muted">
+                          {c.suggestions?.length || 0} suggestions
+                        </span>
+                        <span className="text-xs text-text-muted">{date}</span>
+                      </div>
                     </div>
+                    <ChevronRight
+                      size={16}
+                      strokeWidth={1.5}
+                      className="text-text-muted shrink-0"
+                    />
                   </div>
-                  <ChevronRight size={16} strokeWidth={1.5} className="text-text-muted shrink-0" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
