@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { generateEmbedding, searchKnowledge } from "./embeddings";
 
 interface CaseData {
@@ -124,8 +124,19 @@ Tu dois repondre STRICTEMENT au format JSON suivant, sans aucun texte avant ou a
   ]
 }`;
 
+function extractJson(text: string): string {
+  // Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+  const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlock) return codeBlock[1].trim();
+  return text.trim();
+}
+
 export async function analyzeCase(caseData: CaseData): Promise<AnalysisResult> {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    generationConfig: { temperature: 0.3, maxOutputTokens: 2000 },
+  });
 
   const caseSummary = buildCaseSummary(caseData);
 
@@ -139,7 +150,9 @@ export async function analyzeCase(caseData: CaseData): Promise<AnalysisResult> {
     )
     .join("\n\n");
 
-  const userMessage = `BASE DOCUMENTAIRE (extraits les plus pertinents):
+  const prompt = `${SYSTEM_PROMPT}
+
+BASE DOCUMENTAIRE (extraits les plus pertinents):
 ${contextText}
 
 ---
@@ -149,23 +162,14 @@ ${caseSummary}
 
 Analyse ce cas clinique en te basant sur la base documentaire ci-dessus. Fournis les diagnostics differentiels, les angles morts et les examens recommandes au format JSON specifie.`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userMessage },
-    ],
-    temperature: 0.3,
-    max_tokens: 2000,
-    response_format: { type: "json_object" },
-  });
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
 
-  const content = completion.choices[0]?.message?.content;
-  if (!content) {
+  if (!text) {
     throw new Error("Empty response from LLM");
   }
 
-  const parsed = JSON.parse(content) as AnalysisResult;
+  const parsed = JSON.parse(extractJson(text)) as AnalysisResult;
 
   if (
     !Array.isArray(parsed.diagnoses) ||
