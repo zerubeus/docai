@@ -49,9 +49,12 @@ export default function TopNav() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          <button className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-surface transition-colors duration-150">
+          <Link
+            href="/profile"
+            className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-surface transition-colors duration-150"
+          >
             <User size={18} strokeWidth={1.5} />
-          </button>
+          </Link>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="lg:hidden p-2 rounded-lg text-text-secondary hover:bg-surface"
@@ -83,6 +86,13 @@ export default function TopNav() {
             className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary"
           >
             Nouveau Cas
+          </Link>
+          <Link
+            href="/profile"
+            onClick={() => setMobileOpen(false)}
+            className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary"
+          >
+            Mon profil
           </Link>
           <Link
             href="/settings"

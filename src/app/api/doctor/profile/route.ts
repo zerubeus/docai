@@ -33,11 +33,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Non autorise" }, { status: 401 });
 
   const body = await request.json();
-  const { specialty, license_number } = body;
+  const { first_name, last_name, specialty, license_number } = body;
 
   const updates: Record<string, string> = {};
+  if (first_name) updates.first_name = first_name;
+  if (last_name) updates.last_name = last_name;
   if (specialty) updates.specialty = specialty;
-  if (license_number) updates.license_number = license_number;
+  if (license_number !== undefined) updates.license_number = license_number;
 
   const { data, error } = await supabase
     .from("doctors")
