@@ -14,6 +14,7 @@ import {
   Pencil,
   Loader2,
 } from "lucide-react";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface DoctorProfile {
   id: string;
@@ -37,15 +38,6 @@ interface CaseData {
     sex: string;
   };
 }
-
-const statusConfig: Record<
-  string,
-  { label: string; color: string; icon: typeof Clock }
-> = {
-  en_cours: { label: "En cours", color: "text-warning", icon: Clock },
-  resolu: { label: "Resolu", color: "text-success", icon: CheckCircle },
-  archive: { label: "Archive", color: "text-text-muted", icon: CheckCircle },
-};
 
 function StatCard({
   label,
@@ -73,18 +65,20 @@ function getInitials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 export default function ProfilePage() {
+  const { t, lang } = useTranslation();
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [cases, setCases] = useState<CaseData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const statusConfig: Record<
+    string,
+    { label: string; color: string; icon: typeof Clock }
+  > = {
+    en_cours: { label: t("profile.statusOngoing"), color: "text-warning", icon: Clock },
+    resolu: { label: t("profile.statusResolved"), color: "text-success", icon: CheckCircle },
+    archive: { label: t("profile.statusArchived"), color: "text-text-muted", icon: CheckCircle },
+  };
 
   useEffect(() => {
     Promise.all([
@@ -109,7 +103,13 @@ export default function ProfilePage() {
 
   const recentCases = cases.slice(0, 5);
   const totalCases = cases.length;
-  const memberSince = profile?.created_at ? formatDate(profile.created_at) : "—";
+
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString(
+        lang === "ar" ? "ar-TN" : lang === "en" ? "en-US" : "fr-FR",
+        { year: "numeric", month: "long", day: "numeric" }
+      )
+    : "—";
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -148,7 +148,7 @@ export default function ProfilePage() {
                 )}
                 <span className="flex items-center gap-1.5">
                   <CalendarDays size={13} strokeWidth={1.5} />
-                  Membre depuis {memberSince}
+                  {t("profile.memberSince")} {memberSince}
                 </span>
               </div>
               <p className="text-xs text-text-muted">{profile?.email}</p>
@@ -159,7 +159,7 @@ export default function ProfilePage() {
             className="inline-flex shrink-0 items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-dark transition-colors duration-150"
           >
             <Pencil size={14} strokeWidth={1.5} />
-            Modifier
+            {t("profile.edit")}
           </Link>
         </div>
       </div>
@@ -167,17 +167,17 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          label="Total des cas"
+          label={t("profile.totalCases")}
           value={totalCases}
           icon={FolderOpen}
         />
         <StatCard
-          label="Cas ce mois-ci"
+          label={t("profile.casesThisMonth")}
           value={profile?.cases_this_month ?? 0}
           icon={Clock}
         />
         <StatCard
-          label="Membre depuis"
+          label={t("profile.memberSinceLabel")}
           value={profile?.created_at ? new Date(profile.created_at).getFullYear() : "—"}
           icon={CalendarDays}
         />
@@ -186,17 +186,17 @@ export default function ProfilePage() {
       {/* Recent cases */}
       <div className="bg-white rounded-lg border border-border shadow-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text-dark">Cas recents</h2>
+          <h2 className="text-sm font-semibold text-text-dark">{t("profile.recentCases")}</h2>
           <Link
             href="/cases"
             className="text-xs text-accent hover:underline transition-colors duration-150"
           >
-            Voir tout
+            {t("profile.viewAll")}
           </Link>
         </div>
         {recentCases.length === 0 ? (
           <p className="px-6 py-8 text-sm text-text-secondary text-center">
-            Aucun cas pour le moment.
+            {t("profile.noCases")}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -222,7 +222,7 @@ export default function ProfilePage() {
                           {status.label}
                         </span>
                         <span className="text-xs text-text-muted">
-                          {c.patients?.age} ans, {c.patients?.sex}
+                          {c.patients?.age} {t("profile.yearsOld")}, {c.patients?.sex}
                         </span>
                         <span className="text-xs text-text-muted">{date}</span>
                       </div>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                     <ChevronRight
                       size={15}
                       strokeWidth={1.5}
-                      className="shrink-0 text-text-muted ml-3"
+                      className="shrink-0 text-text-muted ms-3 rtl:rotate-180"
                     />
                   </Link>
                 </li>

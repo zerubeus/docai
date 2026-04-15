@@ -16,6 +16,7 @@ import {
   Pill,
   Loader2,
 } from "lucide-react";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface Suggestion {
   id: string;
@@ -62,15 +63,9 @@ interface CaseData {
   suggestions: Suggestion[];
 }
 
-const outcomeLabels: Record<string, string> = {
-  ameliore: "Ameliore",
-  stable: "Stable",
-  aggrave: "Aggrave",
-  sans_effet: "Sans effet",
-};
-
 export default function AnalysisPage() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
   const [caseData, setCaseData] = useState<CaseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<
@@ -79,6 +74,13 @@ export default function AnalysisPage() {
   const [comment, setComment] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const outcomeLabels: Record<string, string> = {
+    ameliore: t("caseDetail.outcomeImproved"),
+    stable: t("caseDetail.outcomeStable"),
+    aggrave: t("caseDetail.outcomeWorse"),
+    sans_effet: t("caseDetail.outcomeNoEffect"),
+  };
 
   useEffect(() => {
     fetch(`/api/cases/${id}`)
@@ -133,7 +135,7 @@ export default function AnalysisPage() {
   if (!caseData) {
     return (
       <div className="text-center py-20 text-text-secondary text-sm">
-        Cas introuvable
+        {t("caseDetail.notFound")}
       </div>
     );
   }
@@ -156,30 +158,30 @@ export default function AnalysisPage() {
           <div className="bg-white rounded-lg border border-border shadow-sm p-5">
             <div className="flex items-center gap-2 mb-3">
               <User size={16} strokeWidth={1.5} className="text-primary" />
-              <h2 className="text-sm font-semibold text-text-dark">Patient</h2>
+              <h2 className="text-sm font-semibold text-text-dark">{t("caseDetail.patientSection")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-3 text-sm">
               <div>
-                <p className="text-text-muted text-xs">Age</p>
+                <p className="text-text-muted text-xs">{t("caseDetail.age")}</p>
                 <p className="font-medium text-text-dark">
-                  {caseData.patients?.age} ans
+                  {caseData.patients?.age} {t("caseDetail.yearsOld")}
                 </p>
               </div>
               <div>
-                <p className="text-text-muted text-xs">Sexe</p>
+                <p className="text-text-muted text-xs">{t("caseDetail.sex")}</p>
                 <p className="font-medium text-text-dark">
                   {caseData.patients?.sex}
                 </p>
               </div>
               <div>
-                <p className="text-text-muted text-xs">Region</p>
+                <p className="text-text-muted text-xs">{t("caseDetail.region")}</p>
                 <p className="font-medium text-text-dark">
                   {caseData.patients?.region}
                 </p>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-border">
-              <p className="text-text-muted text-xs">Motif principal</p>
+              <p className="text-text-muted text-xs">{t("caseDetail.chiefComplaint")}</p>
               <p className="text-sm font-medium text-text-dark mt-0.5">
                 {caseData.chief_complaint}
               </p>
@@ -189,13 +191,9 @@ export default function AnalysisPage() {
           {caseData.case_symptoms?.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Activity
-                  size={16}
-                  strokeWidth={1.5}
-                  className="text-primary"
-                />
+                <Activity size={16} strokeWidth={1.5} className="text-primary" />
                 <h2 className="text-sm font-semibold text-text-dark">
-                  Symptomes
+                  {t("caseDetail.symptomsSection")}
                 </h2>
               </div>
               <div className="space-y-2">
@@ -219,7 +217,7 @@ export default function AnalysisPage() {
                         ))}
                       </div>
                       {s.duration && (
-                        <span className="text-xs text-text-muted w-20 text-right">
+                        <span className="text-xs text-text-muted w-20 text-end">
                           {s.duration}
                         </span>
                       )}
@@ -233,13 +231,9 @@ export default function AnalysisPage() {
           {caseData.case_history?.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
-                <ClipboardList
-                  size={16}
-                  strokeWidth={1.5}
-                  className="text-primary"
-                />
+                <ClipboardList size={16} strokeWidth={1.5} className="text-primary" />
                 <h2 className="text-sm font-semibold text-text-dark">
-                  Antecedents
+                  {t("caseDetail.historySection")}
                 </h2>
               </div>
               <div className="space-y-3">
@@ -250,7 +244,7 @@ export default function AnalysisPage() {
                       <p className="text-sm font-medium text-text-dark">
                         {h.condition_name}
                         {h.year_diagnosed && (
-                          <span className="ml-2 text-xs text-text-muted font-normal">
+                          <span className="ms-2 text-xs text-text-muted font-normal">
                             ({h.year_diagnosed})
                           </span>
                         )}
@@ -270,41 +264,37 @@ export default function AnalysisPage() {
           {caseData.case_tests?.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
-                <FlaskConical
-                  size={16}
-                  strokeWidth={1.5}
-                  className="text-primary"
-                />
+                <FlaskConical size={16} strokeWidth={1.5} className="text-primary" />
                 <h2 className="text-sm font-semibold text-text-dark">
-                  Examens
+                  {t("caseDetail.examsSection")}
                 </h2>
               </div>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-1.5 text-xs font-medium text-text-muted">
-                      Examen
+                    <th className="text-start py-1.5 text-xs font-medium text-text-muted">
+                      {t("caseDetail.examCol")}
                     </th>
-                    <th className="text-right py-1.5 text-xs font-medium text-text-muted">
-                      Resultat
+                    <th className="text-end py-1.5 text-xs font-medium text-text-muted">
+                      {t("caseDetail.resultCol")}
                     </th>
-                    <th className="text-right py-1.5 text-xs font-medium text-text-muted">
-                      Ref.
+                    <th className="text-end py-1.5 text-xs font-medium text-text-muted">
+                      {t("caseDetail.refCol")}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {caseData.case_tests.map((t, i) => (
+                  {caseData.case_tests.map((t_item, i) => (
                     <tr key={i}>
-                      <td className="py-1.5 text-text-dark">{t.test_name}</td>
-                      <td className="py-1.5 text-right font-medium text-text-dark">
-                        {t.result_value}{" "}
+                      <td className="py-1.5 text-text-dark">{t_item.test_name}</td>
+                      <td className="py-1.5 text-end font-medium text-text-dark">
+                        {t_item.result_value}{" "}
                         <span className="text-text-muted font-normal">
-                          {t.unit}
+                          {t_item.unit}
                         </span>
                       </td>
-                      <td className="py-1.5 text-right text-text-muted text-xs">
-                        {t.reference_range}
+                      <td className="py-1.5 text-end text-text-muted text-xs">
+                        {t_item.reference_range}
                       </td>
                     </tr>
                   ))}
@@ -318,36 +308,36 @@ export default function AnalysisPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Pill size={16} strokeWidth={1.5} className="text-primary" />
                 <h2 className="text-sm font-semibold text-text-dark">
-                  Traitements
+                  {t("caseDetail.treatmentsSection")}
                 </h2>
               </div>
               <div className="space-y-2">
-                {caseData.case_treatments.map((t, i) => (
+                {caseData.case_treatments.map((tr, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between text-sm"
                   >
                     <div>
                       <span className="font-medium text-text-dark">
-                        {t.treatment_name}
+                        {tr.treatment_name}
                       </span>
-                      {t.dosage && (
-                        <span className="text-text-muted ml-2">
-                          {t.dosage}
+                      {tr.dosage && (
+                        <span className="text-text-muted ms-2">
+                          {tr.dosage}
                         </span>
                       )}
                     </div>
-                    {t.outcome && (
+                    {tr.outcome && (
                       <span
                         className={`text-xs font-medium ${
-                          t.outcome === "ameliore"
+                          tr.outcome === "ameliore"
                             ? "text-success"
-                            : t.outcome === "aggrave"
+                            : tr.outcome === "aggrave"
                               ? "text-error"
                               : "text-text-secondary"
                         }`}
                       >
-                        {outcomeLabels[t.outcome] || t.outcome}
+                        {outcomeLabels[tr.outcome] || tr.outcome}
                       </span>
                     )}
                   </div>
@@ -362,7 +352,7 @@ export default function AnalysisPage() {
           {diagnoses.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <h2 className="text-sm font-semibold text-text-dark mb-4">
-                Diagnostics differentiels
+                {t("caseDetail.diagnosesSection")}
               </h2>
               <div className="space-y-4">
                 {diagnoses.map((d, i) => {
@@ -407,7 +397,7 @@ export default function AnalysisPage() {
           {blindSpots.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <h2 className="text-sm font-semibold text-text-dark mb-4">
-                Points a explorer
+                {t("caseDetail.blindSpotsSection")}
               </h2>
               <div className="space-y-3">
                 {blindSpots.map((s) => (
@@ -432,21 +422,21 @@ export default function AnalysisPage() {
           {recommendedTests.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <h2 className="text-sm font-semibold text-text-dark mb-4">
-                Examens recommandes
+                {t("caseDetail.recommendedTestsSection")}
               </h2>
               <div className="space-y-2">
-                {recommendedTests.map((t) => (
+                {recommendedTests.map((rt) => (
                   <div
-                    key={t.id}
+                    key={rt.id}
                     className="flex items-start gap-2 py-2 border-b border-border last:border-0"
                   >
                     <ChevronRight
                       size={14}
                       strokeWidth={1.5}
-                      className="text-accent shrink-0 mt-0.5"
+                      className="text-accent shrink-0 mt-0.5 rtl:rotate-180"
                     />
                     <p className="text-sm font-medium text-text-dark">
-                      {t.content}
+                      {rt.content}
                     </p>
                   </div>
                 ))}
@@ -457,11 +447,11 @@ export default function AnalysisPage() {
           {diagnoses.length > 0 && (
             <div className="bg-white rounded-lg border border-border shadow-sm p-5">
               <h2 className="text-sm font-semibold text-text-dark mb-4">
-                Votre avis
+                {t("caseDetail.feedbackSection")}
               </h2>
               {feedbackSent ? (
                 <p className="text-sm text-success">
-                  Feedback envoye. Merci.
+                  {t("caseDetail.feedbackSent")}
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -481,7 +471,7 @@ export default function AnalysisPage() {
                           }`}
                         >
                           <ThumbsUp size={12} strokeWidth={1.5} />
-                          Utile
+                          {t("caseDetail.useful")}
                         </button>
                         <button
                           onClick={() =>
@@ -494,7 +484,7 @@ export default function AnalysisPage() {
                           }`}
                         >
                           <ThumbsDown size={12} strokeWidth={1.5} />
-                          Non pertinent
+                          {t("caseDetail.notRelevant")}
                         </button>
                       </div>
                     </div>
@@ -504,7 +494,7 @@ export default function AnalysisPage() {
                       htmlFor="comment"
                       className="block text-xs font-medium text-text-secondary mb-1.5"
                     >
-                      Commentaire
+                      {t("caseDetail.comment")}
                     </label>
                     <textarea
                       id="comment"
@@ -512,7 +502,7 @@ export default function AnalysisPage() {
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150 resize-none"
-                      placeholder="Ajoutez un commentaire..."
+                      placeholder={t("caseDetail.commentPlaceholder")}
                     />
                   </div>
                   <button
@@ -525,8 +515,8 @@ export default function AnalysisPage() {
                   >
                     <Send size={14} strokeWidth={1.5} />
                     {submittingFeedback
-                      ? "Envoi..."
-                      : "Envoyer le feedback"}
+                      ? t("caseDetail.submitting")
+                      : t("caseDetail.submitFeedback")}
                   </button>
                 </div>
               )}

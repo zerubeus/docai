@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Brain, SendHorizontal, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface Source {
   title: string;
@@ -14,12 +15,6 @@ interface Message {
   content: string;
   sources?: Source[];
 }
-
-const EXAMPLE_PROMPTS = [
-  "Douleurs thoraciques chez un patient de 55 ans",
-  "Interactions medicamenteuses amiodarone",
-  "Diagnostic differentiel cephalees chroniques",
-];
 
 function TypingIndicator() {
   return (
@@ -47,10 +42,12 @@ function TypingIndicator() {
   );
 }
 
-function SourcesSection({ sources }: { sources: Source[] }) {
+function SourcesSection({ sources, sourceLabel, sourcesLabel }: { sources: Source[]; sourceLabel: string; sourcesLabel: string }) {
   const [open, setOpen] = useState(false);
 
   if (!sources || sources.length === 0) return null;
+
+  const label = sources.length > 1 ? sourcesLabel : sourceLabel;
 
   return (
     <div className="mt-3 border-t border-border pt-3">
@@ -63,7 +60,7 @@ function SourcesSection({ sources }: { sources: Source[] }) {
         ) : (
           <ChevronDown size={14} strokeWidth={1.5} />
         )}
-        {sources.length} source{sources.length > 1 ? "s" : ""} consultee{sources.length > 1 ? "s" : ""}
+        {sources.length} {label}
       </button>
       {open && (
         <ul className="mt-2 space-y-2">
@@ -79,7 +76,7 @@ function SourcesSection({ sources }: { sources: Source[] }) {
   );
 }
 
-function AssistantMessage({ message }: { message: Message }) {
+function AssistantMessage({ message, sourceLabel, sourcesLabel }: { message: Message; sourceLabel: string; sourcesLabel: string }) {
   return (
     <div className="flex items-start gap-3 max-w-2xl">
       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -87,7 +84,9 @@ function AssistantMessage({ message }: { message: Message }) {
       </div>
       <div className="bg-white border border-border rounded-xl px-4 py-3 shadow-sm flex-1 min-w-0">
         <p className="text-sm text-text-dark leading-relaxed whitespace-pre-wrap">{message.content}</p>
-        {message.sources && <SourcesSection sources={message.sources} />}
+        {message.sources && (
+          <SourcesSection sources={message.sources} sourceLabel={sourceLabel} sourcesLabel={sourcesLabel} />
+        )}
       </div>
     </div>
   );
@@ -121,11 +120,18 @@ function playNotificationSound() {
 }
 
 export default function AssistantPage() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const examplePrompts = [
+    t("assistant.example1"),
+    t("assistant.example2"),
+    t("assistant.example3"),
+  ];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -184,7 +190,7 @@ export default function AssistantPage() {
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: "Une erreur est survenue. Veuillez reessayer.",
+          content: t("assistant.error"),
           sources: [],
         },
       ]);
@@ -211,14 +217,14 @@ export default function AssistantPage() {
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <Brain size={20} strokeWidth={1.5} className="text-primary" />
-          <h1 className="text-base font-semibold text-text-dark">Assistant DocAI</h1>
+          <h1 className="text-base font-semibold text-text-dark">{t("assistant.title")}</h1>
         </div>
         <button
           onClick={clearConversation}
           className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-text-secondary border border-border rounded-lg hover:bg-surface hover:text-text-dark transition-colors duration-150"
         >
           <Trash2 size={15} strokeWidth={1.5} />
-          Nouvelle conversation
+          {t("assistant.newConversation")}
         </button>
       </div>
 
@@ -230,13 +236,13 @@ export default function AssistantPage() {
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Brain size={28} strokeWidth={1.5} className="text-primary" />
               </div>
-              <h2 className="text-xl font-semibold text-text-dark">Posez votre question clinique</h2>
+              <h2 className="text-xl font-semibold text-text-dark">{t("assistant.heading")}</h2>
               <p className="text-sm text-text-secondary max-w-sm">
-                Je consulte votre base documentaire pour vous fournir des reponses etayees sur les evidences.
+                {t("assistant.description")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-              {EXAMPLE_PROMPTS.map((prompt) => (
+              {examplePrompts.map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => sendMessage(prompt)}
@@ -253,7 +259,12 @@ export default function AssistantPage() {
               msg.role === "user" ? (
                 <UserMessage key={msg.id} message={msg} />
               ) : (
-                <AssistantMessage key={msg.id} message={msg} />
+                <AssistantMessage
+                  key={msg.id}
+                  message={msg}
+                  sourceLabel={t("assistant.source")}
+                  sourcesLabel={t("assistant.sources")}
+                />
               )
             )}
             {loading && <TypingIndicator />}
@@ -274,7 +285,7 @@ export default function AssistantPage() {
                 adjustTextarea();
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Posez une question clinique..."
+              placeholder={t("assistant.placeholder")}
               disabled={loading}
               rows={1}
               className="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-50 transition-colors duration-150 leading-relaxed"
@@ -290,7 +301,7 @@ export default function AssistantPage() {
           </button>
         </div>
         <p className="text-center text-xs text-text-muted mt-2 max-w-3xl mx-auto">
-          Appuyez sur Entree pour envoyer, Maj+Entree pour une nouvelle ligne
+          {t("assistant.hint")}
         </p>
       </div>
     </div>

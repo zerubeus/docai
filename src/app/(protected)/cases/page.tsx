@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Clock, CheckCircle, Filter, Loader2 } from "lucide-react";
+import { useTranslation } from "@/lib/useTranslation";
 
 type CaseStatus = "en_cours" | "resolu" | "archive";
 
@@ -18,19 +19,20 @@ interface CaseData {
   };
 }
 
-const statusConfig: Record<
-  string,
-  { label: string; color: string; icon: typeof Clock }
-> = {
-  en_cours: { label: "En cours", color: "text-warning", icon: Clock },
-  resolu: { label: "Resolu", color: "text-success", icon: CheckCircle },
-  archive: { label: "Archive", color: "text-text-muted", icon: CheckCircle },
-};
-
 export default function CasesPage() {
+  const { t } = useTranslation();
   const [cases, setCases] = useState<CaseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | CaseStatus>("all");
+
+  const statusConfig: Record<
+    string,
+    { label: string; color: string; icon: typeof Clock }
+  > = {
+    en_cours: { label: t("cases.statusOngoing"), color: "text-warning", icon: Clock },
+    resolu: { label: t("cases.statusResolved"), color: "text-success", icon: CheckCircle },
+    archive: { label: t("cases.statusArchived"), color: "text-text-muted", icon: CheckCircle },
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -48,7 +50,7 @@ export default function CasesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-dark">Mes Cas</h1>
+        <h1 className="text-2xl font-bold text-text-dark">{t("cases.title")}</h1>
         <div className="flex items-center gap-2">
           <Filter size={16} strokeWidth={1.5} className="text-text-muted" />
           <select
@@ -58,9 +60,9 @@ export default function CasesPage() {
             }
             className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150 appearance-none"
           >
-            <option value="all">Tous</option>
-            <option value="en_cours">En cours</option>
-            <option value="resolu">Resolu</option>
+            <option value="all">{t("cases.filterAll")}</option>
+            <option value="en_cours">{t("cases.filterOngoing")}</option>
+            <option value="resolu">{t("cases.filterResolved")}</option>
           </select>
         </div>
       </div>
@@ -74,20 +76,20 @@ export default function CasesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                  ID
+                <th className="text-start px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  {t("cases.colId")}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                  Patient
+                <th className="text-start px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  {t("cases.colPatient")}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
-                  Motif
+                <th className="text-start px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                  {t("cases.colReason")}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-                  Statut
+                <th className="text-start px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  {t("cases.colStatus")}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
-                  Date
+                <th className="text-start px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                  {t("cases.colDate")}
                 </th>
               </tr>
             </thead>
@@ -98,7 +100,7 @@ export default function CasesPage() {
                     colSpan={5}
                     className="px-4 py-8 text-center text-sm text-text-secondary"
                   >
-                    Aucun cas
+                    {t("cases.noCases")}
                   </td>
                 </tr>
               ) : (
@@ -123,7 +125,7 @@ export default function CasesPage() {
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-text-dark">
-                        {c.patients?.age} ans, {c.patients?.sex}
+                        {c.patients?.age} {t("common.yearsOld")}, {c.patients?.sex}
                       </td>
                       <td className="px-4 py-3 text-sm text-text-secondary hidden sm:table-cell max-w-xs truncate">
                         {c.chief_complaint}

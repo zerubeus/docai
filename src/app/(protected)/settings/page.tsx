@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Lock, CreditCard, Bell, Loader2, Check, AlertCircle } from "lucide-react";
+import { User, Lock, CreditCard, Bell, Globe, Loader2, Check, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
+import { useTranslation } from "@/lib/useTranslation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface DoctorProfile {
   id: string;
@@ -64,10 +66,10 @@ function StatusMessage({ message }: { message: MessageState }) {
 
 function SaveButton({
   loading,
-  label = "Enregistrer",
+  label,
 }: {
   loading: boolean;
-  label?: string;
+  label: string;
 }) {
   return (
     <button
@@ -85,19 +87,8 @@ function SaveButton({
   );
 }
 
-const planLabels: Record<string, string> = {
-  free: "Gratuit",
-  active: "Premium",
-  cancelled: "Annule",
-};
-
-const planColors: Record<string, string> = {
-  free: "bg-surface text-text-secondary border border-border",
-  active: "bg-accent/10 text-accent border border-accent/20",
-  cancelled: "bg-error/10 text-error border border-error/20",
-};
-
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -154,12 +145,12 @@ export default function SettingsPage() {
       if (res.ok) {
         const updated = await res.json();
         setProfile(updated);
-        setProfileMessage({ type: "success", text: "Profil mis a jour." });
+        setProfileMessage({ type: "success", text: t("settings.profileSaved") });
       } else {
-        setProfileMessage({ type: "error", text: "Erreur lors de la sauvegarde." });
+        setProfileMessage({ type: "error", text: t("settings.savingError") });
       }
     } catch {
-      setProfileMessage({ type: "error", text: "Erreur reseau." });
+      setProfileMessage({ type: "error", text: t("settings.networkError") });
     } finally {
       setSavingProfile(false);
     }
@@ -170,15 +161,15 @@ export default function SettingsPage() {
     setPasswordMessage(null);
 
     if (!currentPassword) {
-      setPasswordMessage({ type: "error", text: "Veuillez saisir votre mot de passe actuel." });
+      setPasswordMessage({ type: "error", text: t("settings.errorCurrentPassword") });
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordMessage({ type: "error", text: "Le nouveau mot de passe doit comporter au moins 6 caracteres." });
+      setPasswordMessage({ type: "error", text: t("settings.errorPasswordLength") });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: "error", text: "Les mots de passe ne correspondent pas." });
+      setPasswordMessage({ type: "error", text: t("settings.errorPasswordMismatch") });
       return;
     }
 
@@ -189,13 +180,13 @@ export default function SettingsPage() {
       if (error) {
         setPasswordMessage({ type: "error", text: error.message });
       } else {
-        setPasswordMessage({ type: "success", text: "Mot de passe modifie avec succes." });
+        setPasswordMessage({ type: "success", text: t("settings.passwordChanged") });
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       }
     } catch {
-      setPasswordMessage({ type: "error", text: "Erreur reseau." });
+      setPasswordMessage({ type: "error", text: t("settings.networkError") });
     } finally {
       setSavingPassword(false);
     }
@@ -211,41 +202,51 @@ export default function SettingsPage() {
 
   const plan = profile?.subscription_status || "free";
 
+  const planLabels: Record<string, string> = {
+    free: t("settings.planFree"),
+    active: t("settings.planPremium"),
+    cancelled: t("settings.planCancelled"),
+  };
+
+  const planColors: Record<string, string> = {
+    free: "bg-surface text-text-secondary border border-border",
+    active: "bg-accent/10 text-accent border border-accent/20",
+    cancelled: "bg-error/10 text-error border border-error/20",
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-dark">Parametres</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Gerez votre compte et vos preferences.
-        </p>
+        <h1 className="text-2xl font-bold text-text-dark">{t("settings.title")}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t("settings.subtitle")}</p>
       </div>
 
       {/* Informations personnelles */}
-      <SectionCard title="Informations personnelles" icon={User}>
+      <SectionCard title={t("settings.personalInfo")} icon={User}>
         <form onSubmit={saveProfile} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-text-secondary mb-1.5">
-                Prenom
+                {t("settings.firstName")}
               </label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Prenom"
+                placeholder={t("settings.firstNamePlaceholder")}
                 className={inputClass}
                 required
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-text-secondary mb-1.5">
-                Nom
+                {t("settings.lastName")}
               </label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Nom"
+                placeholder={t("settings.lastNamePlaceholder")}
                 className={inputClass}
                 required
               />
@@ -253,55 +254,55 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Email
+              {t("settings.email")}
             </label>
             <input
               type="email"
               value={profile?.email || ""}
               disabled
+              dir="ltr"
               className={inputDisabledClass}
             />
-            <p className="mt-1 text-xs text-text-muted">
-              L&apos;adresse email ne peut pas etre modifiee ici.
-            </p>
+            <p className="mt-1 text-xs text-text-muted">{t("settings.emailNote")}</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Specialite
+              {t("settings.specialty")}
             </label>
             <input
               type="text"
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
-              placeholder="Ex: Medecine generale"
+              placeholder={t("settings.specialtyPlaceholder")}
               className={inputClass}
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Numero de licence
+              {t("settings.licenseNumber")}
             </label>
             <input
               type="text"
               value={licenseNumber}
               onChange={(e) => setLicenseNumber(e.target.value)}
-              placeholder="Ex: TN-12345"
+              placeholder={t("settings.licenseNumberPlaceholder")}
               className={inputClass}
+              dir="ltr"
             />
           </div>
           <div className="flex items-center justify-between pt-2">
             <StatusMessage message={profileMessage} />
-            <SaveButton loading={savingProfile} />
+            <SaveButton loading={savingProfile} label={t("settings.save")} />
           </div>
         </form>
       </SectionCard>
 
       {/* Securite */}
-      <SectionCard title="Securite" icon={Lock}>
+      <SectionCard title={t("settings.security")} icon={Lock}>
         <form onSubmit={changePassword} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Mot de passe actuel
+              {t("settings.currentPassword")}
             </label>
             <input
               type="password"
@@ -314,7 +315,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Nouveau mot de passe
+              {t("settings.newPassword")}
             </label>
             <input
               type="password"
@@ -327,7 +328,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Confirmer le mot de passe
+              {t("settings.confirmPassword")}
             </label>
             <input
               type="password"
@@ -340,20 +341,18 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center justify-between pt-2">
             <StatusMessage message={passwordMessage} />
-            <SaveButton loading={savingPassword} label="Modifier le mot de passe" />
+            <SaveButton loading={savingPassword} label={t("settings.changePassword")} />
           </div>
         </form>
       </SectionCard>
 
       {/* Abonnement */}
-      <SectionCard title="Abonnement" icon={CreditCard}>
+      <SectionCard title={t("settings.subscription")} icon={CreditCard}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-text-dark">Plan actuel</p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Votre abonnement en cours.
-              </p>
+              <p className="text-sm font-medium text-text-dark">{t("settings.currentPlan")}</p>
+              <p className="text-xs text-text-secondary mt-0.5">{t("settings.currentPlanDesc")}</p>
             </div>
             <span
               className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${planColors[plan]}`}
@@ -364,10 +363,8 @@ export default function SettingsPage() {
           <div className="h-px bg-border" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-text-dark">Cas ce mois-ci</p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Nombre de cas crees ce mois.
-              </p>
+              <p className="text-sm font-medium text-text-dark">{t("settings.casesThisMonth")}</p>
+              <p className="text-xs text-text-secondary mt-0.5">{t("settings.casesThisMonthDesc")}</p>
             </div>
             <span className="text-sm font-semibold text-text-dark">
               {profile?.cases_this_month ?? 0}
@@ -377,16 +374,12 @@ export default function SettingsPage() {
       </SectionCard>
 
       {/* Notifications */}
-      <SectionCard title="Notifications" icon={Bell}>
+      <SectionCard title={t("settings.notifications")} icon={Bell}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-text-dark">
-                Notifications par email — nouveaux cas
-              </p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Recevoir un email lors de la creation d&apos;un nouveau cas.
-              </p>
+              <p className="text-sm font-medium text-text-dark">{t("settings.emailCases")}</p>
+              <p className="text-xs text-text-secondary mt-0.5">{t("settings.emailCasesDesc")}</p>
             </div>
             <button
               type="button"
@@ -407,12 +400,8 @@ export default function SettingsPage() {
           <div className="h-px bg-border" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-text-dark">
-                Notifications par email — suggestions IA
-              </p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Recevoir un email lorsque l&apos;IA genere de nouvelles suggestions.
-              </p>
+              <p className="text-sm font-medium text-text-dark">{t("settings.emailSuggestions")}</p>
+              <p className="text-xs text-text-secondary mt-0.5">{t("settings.emailSuggestionsDesc")}</p>
             </div>
             <button
               type="button"
@@ -430,6 +419,14 @@ export default function SettingsPage() {
               />
             </button>
           </div>
+        </div>
+      </SectionCard>
+
+      {/* Langue */}
+      <SectionCard title={t("settings.language")} icon={Globe}>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-text-secondary">{t("settings.languageDesc")}</p>
+          <LanguageSwitcher />
         </div>
       </SectionCard>
     </div>

@@ -5,31 +5,33 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Mail, Stethoscope, Brain, BookOpen, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
-
-const features = [
-  {
-    icon: Brain,
-    title: "Aide au diagnostic differentiel",
-    description: "Analyse intelligente basee sur les recommandations cliniques",
-  },
-  {
-    icon: BookOpen,
-    title: "Base de connaissances medicales",
-    description: "Guidelines HAS, Orphanet et CIM-10 integrees",
-  },
-  {
-    icon: Shield,
-    title: "Recommandations personnalisees",
-    description: "Suggestions adaptees a chaque cas clinique",
-  },
-];
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const features = [
+    {
+      icon: Brain,
+      title: t("login.feature1Title"),
+      description: t("login.feature1Desc"),
+    },
+    {
+      icon: BookOpen,
+      title: t("login.feature2Title"),
+      description: t("login.feature2Desc"),
+    },
+    {
+      icon: Shield,
+      title: t("login.feature3Title"),
+      description: t("login.feature3Desc"),
+    },
+  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +70,7 @@ export default function LoginPage() {
         {/* Tagline + features */}
         <div className="flex flex-col gap-10">
           <p className="text-2xl font-semibold text-white/90 leading-snug">
-            Aide a la decision<br />clinique intelligente
+            {t("login.tagline")}
           </p>
 
           <div className="flex flex-col gap-6">
@@ -110,10 +112,8 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-text-dark">Connexion</h1>
-            <p className="mt-1 text-sm text-text-secondary">
-              Acces a votre espace clinique
-            </p>
+            <h1 className="text-2xl font-bold text-text-dark">{t("login.title")}</h1>
+            <p className="mt-1 text-sm text-text-secondary">{t("login.subtitle")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -128,13 +128,13 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-text-dark mb-1.5"
               >
-                Adresse email
+                {t("login.email")}
               </label>
               <div className="relative">
                 <Mail
                   size={16}
                   strokeWidth={1.5}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  className="absolute start-3 top-1/2 -translate-y-1/2 text-text-muted"
                 />
                 <input
                   id="email"
@@ -142,8 +142,9 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-border bg-white pl-10 pr-4 py-2.5 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150"
-                  placeholder="vous@exemple.com"
+                  dir="ltr"
+                  className="w-full rounded-lg border border-border bg-white ps-10 pe-4 py-2.5 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150"
+                  placeholder={t("login.emailPlaceholder")}
                 />
               </div>
             </div>
@@ -154,20 +155,20 @@ export default function LoginPage() {
                   htmlFor="password"
                   className="block text-sm font-medium text-text-dark"
                 >
-                  Mot de passe
+                  {t("login.password")}
                 </label>
                 <Link
                   href="/forgot-password"
                   className="text-xs text-accent hover:text-accent/80 transition-colors duration-150"
                 >
-                  Mot de passe oublie?
+                  {t("login.forgotPassword")}
                 </Link>
               </div>
               <div className="relative">
                 <Lock
                   size={16}
                   strokeWidth={1.5}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  className="absolute start-3 top-1/2 -translate-y-1/2 text-text-muted"
                 />
                 <input
                   id="password"
@@ -175,8 +176,8 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-border bg-white pl-10 pr-4 py-2.5 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150"
-                  placeholder="Votre mot de passe"
+                  className="w-full rounded-lg border border-border bg-white ps-10 pe-4 py-2.5 text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors duration-150"
+                  placeholder={t("login.passwordPlaceholder")}
                 />
               </div>
             </div>
@@ -186,17 +187,17 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-50 transition-colors duration-150"
             >
-              {loading ? "Connexion en cours..." : "Se connecter"}
+              {loading ? t("login.submitting") : t("login.submit")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-text-secondary">
-            Pas encore de compte?{" "}
+            {t("login.noAccount")}{" "}
             <Link
               href="/register"
               className="font-medium text-accent hover:text-accent/80 transition-colors duration-150"
             >
-              Creer un compte
+              {t("login.createAccount")}
             </Link>
           </p>
         </div>

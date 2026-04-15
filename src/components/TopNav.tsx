@@ -5,16 +5,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
-
-const navLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/cases", label: "Mes Cas" },
-];
+import { useTranslation } from "@/lib/useTranslation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function TopNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
+
+  const navLinks = [
+    { href: "/dashboard", label: t("nav.dashboard") },
+    { href: "/cases", label: t("nav.myCases") },
+  ];
 
   async function handleLogout() {
     const supabase = createClient();
@@ -48,7 +51,8 @@ export default function TopNav() {
             })}
           </nav>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
           <Link
             href="/profile"
             className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-surface transition-colors duration-150"
@@ -85,28 +89,28 @@ export default function TopNav() {
             onClick={() => setMobileOpen(false)}
             className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary"
           >
-            Nouveau Cas
+            {t("nav.newCase")}
           </Link>
           <Link
             href="/profile"
             onClick={() => setMobileOpen(false)}
             className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary"
           >
-            Mon profil
+            {t("nav.myProfile")}
           </Link>
           <Link
             href="/settings"
             onClick={() => setMobileOpen(false)}
             className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary"
           >
-            Parametres
+            {t("nav.settings")}
           </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary w-full"
           >
             <LogOut size={18} strokeWidth={1.5} />
-            Deconnexion
+            {t("nav.logout")}
           </button>
         </div>
       )}

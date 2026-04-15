@@ -12,18 +12,20 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
-
-const navItems = [
-  { href: "/assistant", label: "Assistant", icon: Brain },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/cases", label: "Mes Cas", icon: FolderOpen },
-  { href: "/cases/new", label: "Nouveau Cas", icon: FilePlus },
-  { href: "/settings", label: "Parametres", icon: Settings },
-];
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { href: "/assistant", label: t("nav.assistant"), icon: Brain },
+    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { href: "/cases", label: t("nav.myCases"), icon: FolderOpen },
+    { href: "/cases/new", label: t("nav.newCase"), icon: FilePlus },
+    { href: "/settings", label: t("nav.settings"), icon: Settings },
+  ];
 
   async function handleLogout() {
     const supabase = createClient();
@@ -32,7 +34,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-border">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-border rtl:border-r-0 rtl:border-l">
       <div className="p-6">
         <Link href="/dashboard" className="text-xl font-bold text-primary">
           DocAI
@@ -64,7 +66,7 @@ export default function Sidebar() {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-dark transition-colors duration-150 w-full"
         >
           <LogOut size={18} strokeWidth={1.5} />
-          Deconnexion
+          {t("nav.logout")}
         </button>
       </div>
     </aside>

@@ -13,14 +13,7 @@ import {
   FlaskConical,
   Pill,
 } from "lucide-react";
-
-const STEPS = [
-  { label: "Patient", icon: User },
-  { label: "Symptomes", icon: Activity },
-  { label: "Antecedents", icon: ClipboardList },
-  { label: "Examens", icon: FlaskConical },
-  { label: "Traitements", icon: Pill },
-];
+import { useTranslation } from "@/lib/useTranslation";
 
 const REGIONS = [
   "Tunis",
@@ -32,19 +25,6 @@ const REGIONS = [
   "Monastir",
   "Autre",
 ];
-
-const SYMPTOM_SUGGESTIONS = [
-  "Douleur",
-  "Fievre",
-  "Fatigue",
-  "Nausees",
-  "Cephalees",
-  "Toux",
-  "Dyspnee",
-  "Vertiges",
-];
-
-const OUTCOME_OPTIONS = ["Ameliore", "Stable", "Aggrave", "Sans effet"];
 
 interface Symptom {
   name: string;
@@ -81,7 +61,29 @@ const selectClass =
 
 export default function NewCasePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
+
+  const STEPS = [
+    { label: t("caseNew.stepPatient"), icon: User },
+    { label: t("caseNew.stepSymptoms"), icon: Activity },
+    { label: t("caseNew.stepHistory"), icon: ClipboardList },
+    { label: t("caseNew.stepExams"), icon: FlaskConical },
+    { label: t("caseNew.stepTreatments"), icon: Pill },
+  ];
+
+  const OUTCOME_OPTIONS = [
+    { value: "Ameliore", label: t("caseNew.outcomeImproved") },
+    { value: "Stable", label: t("caseNew.outcomeStable") },
+    { value: "Aggrave", label: t("caseNew.outcomeWorse") },
+    { value: "Sans effet", label: t("caseNew.outcomeNoEffect") },
+  ];
+
+  const SYMPTOM_SUGGESTIONS: string[] = (
+    t("caseNew.symptomSuggestions") as unknown as string[]
+  ).length
+    ? (t("caseNew.symptomSuggestions") as unknown as string[])
+    : ["Douleur", "Fievre", "Fatigue", "Nausees", "Cephalees", "Toux", "Dyspnee", "Vertiges"];
 
   // Step 1 - Patient
   const [age, setAge] = useState("");
@@ -186,7 +188,7 @@ export default function NewCasePage() {
       symptoms: symptoms.filter((s) => s.name.trim()),
       history: antecedents.filter((a) => a.condition.trim()),
       tests: examens.filter((e) => e.testName.trim()),
-      treatments: treatments.filter((t) => t.name.trim()),
+      treatments: treatments.filter((tr) => tr.name.trim()),
     };
 
     try {
@@ -198,7 +200,7 @@ export default function NewCasePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Erreur lors de la creation du cas");
+        setError(data.error || t("caseNew.errorCreation"));
         setSubmitting(false);
         return;
       }
@@ -206,7 +208,7 @@ export default function NewCasePage() {
       const { id } = await res.json();
       router.push(`/cases/${id}`);
     } catch {
-      setError("Erreur de connexion");
+      setError(t("caseNew.errorConnection"));
       setSubmitting(false);
     }
   }
@@ -216,10 +218,8 @@ export default function NewCasePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-dark">Nouveau Cas</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Renseignez les informations du patient
-        </p>
+        <h1 className="text-2xl font-bold text-text-dark">{t("caseNew.title")}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t("caseNew.subtitle")}</p>
       </div>
 
       {/* Progress bar */}
@@ -264,12 +264,12 @@ export default function NewCasePage() {
         {step === 0 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-text-dark">
-              Informations patient
+              {t("caseNew.patientInfoTitle")}
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="age" className="block text-sm font-medium text-text-dark mb-1.5">
-                  Age
+                  {t("caseNew.age")}
                 </label>
                 <input
                   id="age"
@@ -279,12 +279,13 @@ export default function NewCasePage() {
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   className={inputClass}
-                  placeholder="Ex: 45"
+                  placeholder={t("caseNew.agePlaceholder")}
+                  dir="ltr"
                 />
               </div>
               <div>
                 <label htmlFor="sex" className="block text-sm font-medium text-text-dark mb-1.5">
-                  Sexe
+                  {t("caseNew.sex")}
                 </label>
                 <select
                   id="sex"
@@ -293,7 +294,7 @@ export default function NewCasePage() {
                   className={selectClass}
                 >
                   <option value="" disabled>
-                    Choisir
+                    {t("caseNew.sexChoose")}
                   </option>
                   <option value="M">M</option>
                   <option value="F">F</option>
@@ -302,7 +303,7 @@ export default function NewCasePage() {
             </div>
             <div>
               <label htmlFor="region" className="block text-sm font-medium text-text-dark mb-1.5">
-                Region
+                {t("caseNew.region")}
               </label>
               <select
                 id="region"
@@ -311,7 +312,7 @@ export default function NewCasePage() {
                 className={selectClass}
               >
                 <option value="" disabled>
-                  Choisir une region
+                  {t("caseNew.regionChoose")}
                 </option>
                 {REGIONS.map((r) => (
                   <option key={r} value={r}>
@@ -322,7 +323,7 @@ export default function NewCasePage() {
             </div>
             <div>
               <label htmlFor="motif" className="block text-sm font-medium text-text-dark mb-1.5">
-                Motif principal
+                {t("caseNew.chiefComplaint")}
               </label>
               <input
                 id="motif"
@@ -330,7 +331,7 @@ export default function NewCasePage() {
                 value={motif}
                 onChange={(e) => setMotif(e.target.value)}
                 className={inputClass}
-                placeholder="Ex: Douleur thoracique recurrente"
+                placeholder={t("caseNew.chiefComplaintPlaceholder")}
               />
             </div>
           </div>
@@ -339,13 +340,13 @@ export default function NewCasePage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-text-dark">Symptomes</h2>
+              <h2 className="text-lg font-semibold text-text-dark">{t("caseNew.symptomsTitle")}</h2>
               <button
                 onClick={addSymptom}
                 className="inline-flex items-center gap-1 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors duration-150"
               >
                 <Plus size={14} strokeWidth={1.5} />
-                Ajouter
+                {t("caseNew.add")}
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mb-2">
@@ -378,19 +379,19 @@ export default function NewCasePage() {
                   <div className="flex-1 grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Symptome
+                        {t("caseNew.symptomName")}
                       </label>
                       <input
                         type="text"
                         value={sym.name}
                         onChange={(e) => updateSymptom(i, "name", e.target.value)}
                         className={inputClass}
-                        placeholder="Nom"
+                        placeholder={t("caseNew.symptomNamePlaceholder")}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Severite (1-5)
+                        {t("caseNew.severity")}
                       </label>
                       <select
                         value={sym.severity}
@@ -408,7 +409,7 @@ export default function NewCasePage() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Duree
+                        {t("caseNew.duration")}
                       </label>
                       <input
                         type="text"
@@ -417,7 +418,7 @@ export default function NewCasePage() {
                           updateSymptom(i, "duration", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: 2 semaines"
+                        placeholder={t("caseNew.durationPlaceholder")}
                       />
                     </div>
                   </div>
@@ -439,14 +440,14 @@ export default function NewCasePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-text-dark">
-                Antecedents medicaux
+                {t("caseNew.historyTitle")}
               </h2>
               <button
                 onClick={addAntecedent}
                 className="inline-flex items-center gap-1 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors duration-150"
               >
                 <Plus size={14} strokeWidth={1.5} />
-                Ajouter
+                {t("caseNew.add")}
               </button>
             </div>
             <div className="space-y-3">
@@ -458,7 +459,7 @@ export default function NewCasePage() {
                   <div className="flex-1 grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Condition
+                        {t("caseNew.condition")}
                       </label>
                       <input
                         type="text"
@@ -467,12 +468,12 @@ export default function NewCasePage() {
                           updateAntecedent(i, "condition", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: Diabete type 2"
+                        placeholder={t("caseNew.conditionPlaceholder")}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Annee
+                        {t("caseNew.year")}
                       </label>
                       <input
                         type="text"
@@ -481,12 +482,13 @@ export default function NewCasePage() {
                           updateAntecedent(i, "year", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: 2018"
+                        placeholder={t("caseNew.yearPlaceholder")}
+                        dir="ltr"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Notes
+                        {t("caseNew.notes")}
                       </label>
                       <input
                         type="text"
@@ -495,7 +497,7 @@ export default function NewCasePage() {
                           updateAntecedent(i, "notes", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Notes"
+                        placeholder={t("caseNew.notesPlaceholder")}
                       />
                     </div>
                   </div>
@@ -517,14 +519,14 @@ export default function NewCasePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-text-dark">
-                Examens complementaires
+                {t("caseNew.examsTitle")}
               </h2>
               <button
                 onClick={addExamen}
                 className="inline-flex items-center gap-1 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors duration-150"
               >
                 <Plus size={14} strokeWidth={1.5} />
-                Ajouter
+                {t("caseNew.add")}
               </button>
             </div>
             <div className="space-y-3">
@@ -537,7 +539,7 @@ export default function NewCasePage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">
-                          Examen
+                          {t("caseNew.exam")}
                         </label>
                         <input
                           type="text"
@@ -546,12 +548,12 @@ export default function NewCasePage() {
                             updateExamen(i, "testName", e.target.value)
                           }
                           className={inputClass}
-                          placeholder="Ex: Glycemie a jeun"
+                          placeholder={t("caseNew.examPlaceholder")}
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">
-                          Resultat
+                          {t("caseNew.result")}
                         </label>
                         <input
                           type="text"
@@ -560,14 +562,15 @@ export default function NewCasePage() {
                             updateExamen(i, "result", e.target.value)
                           }
                           className={inputClass}
-                          placeholder="Ex: 1.26"
+                          placeholder={t("caseNew.resultPlaceholder")}
+                          dir="ltr"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">
-                          Unite
+                          {t("caseNew.unit")}
                         </label>
                         <input
                           type="text"
@@ -576,12 +579,13 @@ export default function NewCasePage() {
                             updateExamen(i, "unit", e.target.value)
                           }
                           className={inputClass}
-                          placeholder="g/L"
+                          placeholder={t("caseNew.unitPlaceholder")}
+                          dir="ltr"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">
-                          Ref.
+                          {t("caseNew.refRange")}
                         </label>
                         <input
                           type="text"
@@ -590,12 +594,13 @@ export default function NewCasePage() {
                             updateExamen(i, "referenceRange", e.target.value)
                           }
                           className={inputClass}
-                          placeholder="0.7-1.1"
+                          placeholder={t("caseNew.refRangePlaceholder")}
+                          dir="ltr"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">
-                          Date
+                          {t("caseNew.stepExams")}
                         </label>
                         <input
                           type="date"
@@ -604,6 +609,7 @@ export default function NewCasePage() {
                             updateExamen(i, "date", e.target.value)
                           }
                           className={inputClass}
+                          dir="ltr"
                         />
                       </div>
                     </div>
@@ -626,14 +632,14 @@ export default function NewCasePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-text-dark">
-                Traitements essayes
+                {t("caseNew.treatmentsTitle")}
               </h2>
               <button
                 onClick={addTreatment}
                 className="inline-flex items-center gap-1 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors duration-150"
               >
                 <Plus size={14} strokeWidth={1.5} />
-                Ajouter
+                {t("caseNew.add")}
               </button>
             </div>
             <div className="space-y-3">
@@ -645,7 +651,7 @@ export default function NewCasePage() {
                   <div className="flex-1 grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Traitement
+                        {t("caseNew.treatment")}
                       </label>
                       <input
                         type="text"
@@ -654,12 +660,12 @@ export default function NewCasePage() {
                           updateTreatment(i, "name", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: Paracetamol"
+                        placeholder={t("caseNew.treatmentPlaceholder")}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Posologie
+                        {t("caseNew.dosage")}
                       </label>
                       <input
                         type="text"
@@ -668,12 +674,12 @@ export default function NewCasePage() {
                           updateTreatment(i, "dosage", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: 1g x3/jour"
+                        placeholder={t("caseNew.dosagePlaceholder")}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Duree
+                        {t("caseNew.duration")}
                       </label>
                       <input
                         type="text"
@@ -682,12 +688,12 @@ export default function NewCasePage() {
                           updateTreatment(i, "duration", e.target.value)
                         }
                         className={inputClass}
-                        placeholder="Ex: 2 semaines"
+                        placeholder={t("caseNew.durationPlaceholder")}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">
-                        Resultat
+                        {t("caseNew.outcomeLabel")}
                       </label>
                       <select
                         value={tr.outcome}
@@ -697,11 +703,11 @@ export default function NewCasePage() {
                         className={selectClass}
                       >
                         <option value="" disabled>
-                          Choisir
+                          {t("caseNew.outcomeChoose")}
                         </option>
                         {OUTCOME_OPTIONS.map((o) => (
-                          <option key={o} value={o}>
-                            {o}
+                          <option key={o.value} value={o.value}>
+                            {o.label}
                           </option>
                         ))}
                       </select>
@@ -729,16 +735,16 @@ export default function NewCasePage() {
           disabled={step === 0}
           className="inline-flex items-center gap-1 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-text-dark hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
         >
-          <ChevronLeft size={16} strokeWidth={1.5} />
-          Retour
+          <ChevronLeft size={16} strokeWidth={1.5} className="rtl:rotate-180" />
+          {t("caseNew.back")}
         </button>
         {step < STEPS.length - 1 ? (
           <button
             onClick={() => setStep(step + 1)}
             className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent/90 transition-colors duration-150"
           >
-            Continuer
-            <ChevronRight size={16} strokeWidth={1.5} />
+            {t("caseNew.continue")}
+            <ChevronRight size={16} strokeWidth={1.5} className="rtl:rotate-180" />
           </button>
         ) : (
           <button
@@ -746,7 +752,7 @@ export default function NewCasePage() {
             disabled={submitting}
             className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors duration-150"
           >
-            {submitting ? "Envoi..." : "Soumettre le cas"}
+            {submitting ? t("caseNew.submitting") : t("caseNew.submit")}
           </button>
         )}
       </div>
