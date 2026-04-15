@@ -6,6 +6,7 @@ import { KnowledgeEntry } from "./data/has-guidelines";
 import { getHASGuidelines } from "./data/has-guidelines";
 import { getOrphanetDiseases } from "./data/orphanet-diseases";
 import { getICD10Codes } from "./data/icd10-codes";
+import { getHASSpecialties } from "./data/has-specialties";
 import { getDrugInteractions } from "./data/drug-interactions";
 import { getEmergencyProtocols } from "./data/emergency-protocols";
 import { getTunisiaEpidemiology } from "./data/tunisia-epidemiology";
@@ -251,6 +252,9 @@ async function main() {
   const icd10Entries = getICD10Codes();
   console.log(`   CIM-10/ICD-10 codes: ${icd10Entries.length} entries`);
 
+  const hasSpecEntries = getHASSpecialties();
+  console.log(`   HAS specialty guidelines: ${hasSpecEntries.length} entries`);
+
   const drugEntries = getDrugInteractions();
   console.log(`   Drug interactions: ${drugEntries.length} entries`);
 
@@ -260,7 +264,7 @@ async function main() {
   const epidemiologyEntries = getTunisiaEpidemiology();
   console.log(`   Tunisia epidemiology: ${epidemiologyEntries.length} entries`);
 
-  const allEntries = [...hasEntries, ...orphanetEntries, ...icd10Entries, ...drugEntries, ...emergencyEntries, ...epidemiologyEntries];
+  const allEntries = [...hasEntries, ...orphanetEntries, ...icd10Entries, ...hasSpecEntries, ...drugEntries, ...emergencyEntries, ...epidemiologyEntries];
   console.log(`   Total entries before chunking: ${allEntries.length}`);
 
   console.log("\nChunking content (target: 500-1000 chars per chunk)...");
