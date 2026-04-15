@@ -103,6 +103,23 @@ function UserMessage({ message }: { message: Message }) {
   );
 }
 
+function playNotificationSound() {
+  try {
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(587.33, ctx.currentTime);
+    oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.4);
+  } catch {}
+}
+
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -160,6 +177,7 @@ export default function AssistantPage() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+      playNotificationSound();
     } catch {
       setMessages((prev) => [
         ...prev,
