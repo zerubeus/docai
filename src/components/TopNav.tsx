@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, LogOut, User, Shield } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 import { useTranslation } from "@/lib/useTranslation";
-import { useIsAdmin } from "@/lib/useAdmin";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function TopNav() {
@@ -14,12 +13,10 @@ export default function TopNav() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
-  const admin = useIsAdmin();
 
   const navLinks = [
     { href: "/dashboard", label: t("nav.dashboard") },
     { href: "/cases", label: t("nav.myCases") },
-    ...(admin ? [{ href: "/admin", label: t("nav.admin") }] : []),
   ];
 
   async function handleLogout() {
@@ -108,20 +105,6 @@ export default function TopNav() {
           >
             {t("nav.settings")}
           </Link>
-          {admin && (
-            <Link
-              href="/admin"
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                pathname.startsWith("/admin")
-                  ? "text-accent bg-accent/10"
-                  : "text-text-secondary"
-              }`}
-            >
-              <Shield size={18} strokeWidth={1.5} />
-              {t("nav.admin")}
-            </Link>
-          )}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary w-full"
